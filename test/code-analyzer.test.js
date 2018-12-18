@@ -5,155 +5,188 @@ describe('The javascript parser', () => {
 
     it('assiment', () => {
         assert.deepEqual(
-            initialParse('high = mid - 1')[0],
-            '1 assignment expression high  mid - 1'
-        );
-    });
-    it('function declaration', () => {
-        assert.deepEqual(
-            initialParse('function binarySearch(){}')[0],
-            ' 1 function declaration binarySearch'
-        );
-    });
-
-    it('let', () => {
-        assert.deepEqual(
-            initialParse('let low;')[0],
-            '1 variable declaration low  null'
-        );
-    });
-
-
-    it('while', () => {
-        assert.deepEqual(
-            initialParse('while (low <= high) {}')[0],
-            '1 while statement low <= high'
-        );
-    });
-
-    it('return', () => {
-        assert.deepEqual(
-            initialParse('function binarySearch(X, V, n){\n' +
-                '    let low, high, mid;\n' +
-                '    low = 0;\n' +
-                '    high = n - 1;\n' +
-                '    while (low <= high) {\n' +
-                '        mid = (low + high)/2;\n' +
-                '        if (X < V[mid])\n' +
-                '            high = mid - 1;\n' +
-                '        else if (X > V[mid])\n' +
-                '            low = mid + 1;\n' +
-                '        else\n' +
-                '            return mid;\n' +
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = -1;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
                 '    }\n' +
-                '    return -1;\n' +
-                '}')[16],
-            '14 return statement  -1'
+                '}\n','(x=1, y=2, z=3)').name,
+            'foo'
         );
     });
 
-    it('if', () => {
+    it('assiment', () => {
         assert.deepEqual(
-            initialParse('function binarySearch(X, V, n){\n' +
-                '    let low, high, mid;\n' +
-                '    low = 0;\n' +
-                '    high = n - 1;\n' +
-                '    while (low <= high) {\n' +
-                '        mid = (low + high)/2;\n' +
-                '        if (X < V[mid])\n' +
-                '            high = mid - 1;\n' +
-                '        else if (X > V[mid])\n' +
-                '            low = mid + 1;\n' +
-                '        else\n' +
-                '            return mid;\n' +
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
                 '    }\n' +
-                '    return -1;\n' +
-                '}')[11],
-            '7 if statement X < V[mid]'
+                '}\n','(x=1, y=2, z=3)').type,
+            'functionDecl'
         );
     });
 
-    it('variable declaration', () => {
+    it('assiment', () => {
         assert.deepEqual(
-            initialParse('function binarySearch(X, V, n){\n' +
-                '    let low, high, mid;\n' +
-                '    low = 0;\n' +
-                '    high = n - 1;\n' +
-                '    while (low <= high) {\n' +
-                '        mid = (low + high)/2;\n' +
-                '        if (X < V[mid])\n' +
-                '            high = mid - 1;\n' +
-                '        else if (X > V[mid])\n' +
-                '            low = mid + 1;\n' +
-                '        else\n' +
-                '            return mid;\n' +
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
                 '    }\n' +
-                '    return -1;\n' +
-                '}')[1],
-            '1 variable declaration X'
+                '}\n','(x=1, y=2, z=3)').param[0],
+            'x'
         );
     });
 
-    it('assignment', () => {
+    it('assiment', () => {
         assert.deepEqual(
-            initialParse('function binarySearch(X, V, n){\n' +
-                '    let low, high, mid;\n' +
-                '    low = 0;\n' +
-                '    high = n - 1;\n' +
-                '    while (low <= high) {\n' +
-                '        mid = (low + high)/2;\n' +
-                '        if (X < V[mid])\n' +
-                '            high = mid - 1;\n' +
-                '        else if (X > V[mid])\n' +
-                '            low = mid + 1;\n' +
-                '        else\n' +
-                '            return mid;\n' +
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
                 '    }\n' +
-                '    return -1;\n' +
-                '}')[7],
-            '3 assignment expression low  0'
+                '}\n','(x=1, y=2, z=3)').body[0].type,
+            'IfExp'
+        );
+    });
+    it('assiment', () => {
+        assert.deepEqual(
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    }\n' +
+                '}\n','(x=1, y=2, z=3)').body[0].color,
+            'red'
+        );
+    });
+    it('assiment', () => {
+        assert.deepEqual(
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    }\n' +
+                '}\n','(x=1, y=2, z=3)').body[0].test,
+            'x + 1 + y < z'
+        );
+    });
+    it('assiment', () => {
+        assert.deepEqual(
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    if (b < z) {\n' +
+                '        c = c + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else if (b < z * 2) {\n' +
+                '        c = c + x + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    } else {\n' +
+                '        c = c + z + 5;\n' +
+                '        return x + y + z + c;\n' +
+                '    }\n' +
+                '}\n','(x=1, y=2, z=3)').param[1],
+            'y'
         );
     });
 
-    it('assignment with binary', () => {
+    it('assiment', () => {
         assert.deepEqual(
-            initialParse('function binarySearch(X, V, n){\n' +
-                '    let low, high, mid;\n' +
-                '    low = 0;\n' +
-                '    high = n - 1;\n' +
-                '    while (low <= high) {\n' +
-                '        mid = (low + high)/2;\n' +
-                '        if (X < V[mid])\n' +
-                '            high = mid - 1;\n' +
-                '        else if (X > V[mid])\n' +
-                '            low = mid + 1;\n' +
-                '        else\n' +
-                '            return mid;\n' +
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    while (c++ < 10) {\n' +
+                '        a = x * y;\n' +
+                '        z = a * b * c;\n' +
                 '    }\n' +
-                '    return -1;\n' +
-                '}')[8],
-            '4 assignment expression high  n - 1'
+                '    \n' +
+                '    return z;\n' +
+                '}','(x=1, y=2, z=3)').param[1],
+            'y'
         );
     });
 
-    it('normal return', () => {
+    it('assiment', () => {
         assert.deepEqual(
-            initialParse('function binarySearch(X, V, n){\n' +
-                '    let low, high, mid;\n' +
-                '    low = 0;\n' +
-                '    high = n - 1;\n' +
-                '    while (low <= high) {\n' +
-                '        mid = (low + high)/2;\n' +
-                '        if (X < V[mid])\n' +
-                '            high = mid - 1;\n' +
-                '        else if (X > V[mid])\n' +
-                '            low = mid + 1;\n' +
-                '        else\n' +
-                '            return mid;\n' +
+            initialParse('function foo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '    \n' +
+                '    while (c++ < 10) {\n' +
+                '        a = x * y;\n' +
+                '        z = a * b * c;\n' +
                 '    }\n' +
-                '    return -1;\n' +
-                '}')[15],
-            '12 return statement  mid'
+                '    \n' +
+                '    return z;\n' +
+                '}','(x=1, y=2, z=3)').body[0].type,
+            'WhileState'
         );
     });
 

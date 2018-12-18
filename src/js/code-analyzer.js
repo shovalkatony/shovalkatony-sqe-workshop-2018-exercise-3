@@ -1,89 +1,125 @@
 import * as esprima from 'esprima';
+const expr = require('expression-eval');
+'use strict';
+let inputParam;
 
-
-function initialParse(codeToParse) {
-    let returnString = [];
+function initialParse(codeToParse,inputParam1) {
+    let returnFunction = [];
+    let env ={};
     let jsonParse;
+    inputParam = ExpressionStatementinput(esprima.parseScript(inputParam1, {loc: true}),{});
     jsonParse = esprima.parseScript(codeToParse, {loc: true});
-    parseProgram(jsonParse.body,returnString);
-    return returnString;
+    parseProgram(jsonParse.body,returnFunction,env);
+    debugger;
+    return returnFunction;
 }
 
-const parseProgram = (body,stringArr) => {
+const parseProgram = (body,returnFunction,env) => {
+
 
     if(body.type == 'BlockStatement')
         body = body.body;
-    for(let i=0; i<body.length; i++)
-        switchState(body[i],stringArr);
+    else if(body.type == 'IfStatement')
+        IfStatement(body,returnFunction, env);
+    for (let i = 0; i < body.length; i++)
+        switchState(body[i], returnFunction, env);
 };
 
-function switchState(func,stringArr) {
+function switchState(func,returnFunction,env) {
     switch (func.type) {
     case 'FunctionDeclaration':
-        FunctionDeclaration(func, stringArr);
+        FunctionDeclaration(func,returnFunction,env);
         break;
     case 'VariableDeclaration':
-        VariableDeclaration(func, stringArr);
+        VariableDeclaration(func,env);
         break;
     case 'ExpressionStatement':
-        ExpressionStatement(func, stringArr);
+        ExpressionStatement(func, env);
         break;
     default:
-        switchState2(func,stringArr);
+        switchState2(func,returnFunction,env);
     }
 }
 
-function switchState2(func,stringArr) {
+function switchState2(func,returnFunction,env) {
     switch (func.type) {
     case 'WhileStatement':
-        WhileStatement(func, stringArr);
+        WhileStatement(func,returnFunction,env);
         break;
     case 'IfStatement':
-        IfStatement(func, stringArr);
+        IfStatement(func,returnFunction, env);
         break;
     case 'ReturnStatement':
-        ReturnStatement(func, stringArr);
+        ReturnStatement(func,returnFunction,env);
         break;
     }
 
 }
 
-function FunctionDeclaration(func,array)
+function ExpressionStatementinput(func,env)
 {
-    let row = ' '+func.id.loc.start.line+' function declaration '+func.id.name;
-    array.push(row);
-    for(let i=0; i<func.params.length; i++)
-    {
-        let param = ''+func.params[i].loc.start.line+' variable declaration '+func.params[i].name;
-        array.push(param);
-    }
-    parseProgram(func.body,array);
-}
-
-function ExpressionStatement(func,array)
-{
-    let decl;
-    if(func.expression.type == 'AssignmentExpression'){
-        if(func.expression.right.type=='BinaryExpression')
-            decl = ''+func.expression.left.loc.start.line+' assignment expression '+IdentifierLiteral(func.expression.left)+'  '+BinaryExpression(func.expression.right);
+    let add={},vari,val, i;
+    for(i=0;i<func.body[0].expression.expressions.length;i++) {
+        vari = IdentifierLiteral(func.body[0].expression.expressions[i].left);
+        if(func.body[0].expression.expressions[i].right.type=='ArrayExpression') {
+            let arr = [];
+            for (let j = 0; j < func.body[0].expression.expressions[i].right.elements.length; j++)
+                arr.push(func.body[0].expression.expressions[i].right.elements[j].value);
+        }
         else
-            decl = ''+func.expression.left.loc.start.line+' assignment expression '+IdentifierLiteral(func.expression.left)+'  '+IdentifierLiteral(func.expression.right);
-        array.push(decl);
+            val = IdentifierLiteral(func.body[0].expression.expressions[i].right);
+        add[vari] = val;
+        env = Object.assign(env, add);
     }
+    return env;
 }
 
-function VariableDeclaration(func,array)
+function FunctionDeclaration(func,returnFunction,env)
 {
+    let name = func.id.name;
+    let param = [];
+    let functionElement= [];
+    for(let i=0; i<func.params.length; i++)
+        param.push(func.params[i].name);
+    parseProgram(func.body,functionElement,env);
+    Object.assign(returnFunction,{type:'functionDecl',name:name,param:param,body:functionElement});
+}
+
+function ExpressionStatement(func,env)
+{
+    let vari,val;
+    vari = IdentifierLiteral(func.expression.left);
+    val = BinaryExpression(func.expression.right);
+    if(val.includes(vari))
+        val = substitute(val,env);
+    if(!includeString(val)) {
+        const ast = expr.parse(val);
+        val = ''+expr.eval(ast, {});
+    }
+    env[vari] = val;
+}
+function includeString(exp)
+{
+    for(let i=0;i<exp.length;i++)
+        if((exp[i] >= 'A' && exp[i] <= 'Z') || (exp[i] >= 'a' && exp[i] <= 'z'))
+            return true;
+    return false;
+}
+
+function VariableDeclaration(func,env)
+{
+    let add={},vari,val;
     for(let i=0; i<func.declarations.length; i++)
     {
-        let decl = ''+func.declarations[i].id.loc.start.line+' variable declaration '+func.declarations[i].id.name+'  '+func.declarations[i].init;
-        array.push(decl);
+        vari = func.declarations[i].id.name;
+        val = IdentifierLiteral(func.declarations[i].init);
+        add[vari] = val;
+        env = Object.assign(env,add);
     }
 }
 
 function BinaryExpression(func)
 {
-
     return IdentifierLiteral(func.left)+' '+func.operator+' '+IdentifierLiteral(func.right);
 }
 function IdentifierLiteral(func)
@@ -100,22 +136,58 @@ function IdentifierLiteral(func)
         return func.operator+func.argument.value;
 }
 
-function WhileStatement(func,array)
+function WhileStatement(func,returnFunction,env)
 {
-    let decl = ''+func.test.left.loc.start.line+' while statement '+BinaryExpression(func.test);
-    array.push(decl);
-    parseProgram(func.body,array);
+    let subVarTest = substitute(IdentifierLiteral(func.test),env);
+    const ast = expr.parse(subVarTest);
+    const value = expr.eval(ast,inputParam);
+    let body = [];
+    let envC = {};
+    envC = Object.assign({}, env);
+    parseProgram(func.body,body,envC);
+    if(value)
+        returnFunction.push({type:'WhileState',color:'green',test:subVarTest,body:body});
+    else
+        returnFunction.push({type:'WhileState',color:'red',test:subVarTest,body:body});
 }
-function IfStatement(func,array)
+
+function IfStatement(func,returnFunction,env)
 {
-    let decl = ''+func.test.left.loc.start.line+' if statement '+BinaryExpression(func.test);
-    array.push(decl);
-    switchState(func.consequent,array);
-    switchState(func.alternate,array);
+    let subVarTest = substitute(IdentifierLiteral(func.test),env);
+    const ast = expr.parse(subVarTest);
+    const value = expr.eval(ast,inputParam);
+    let bodyCon = [];
+    let bodyAlt = [];
+    let envC = {},envA= {};
+    envC = Object.assign({}, env);
+    envA = Object.assign({}, env);
+    parseProgram(func.consequent,bodyCon,envC);
+    if(func.alternate!=null)
+        parseProgram(func.alternate,bodyAlt,envA);
+    else
+        bodyAlt = null;
+    if(value)
+        returnFunction.push({type:'IfExp',color:'green',test:subVarTest,con:bodyCon,alt:bodyAlt});
+    else
+        returnFunction.push({type:'IfExp',color:'red',test:subVarTest,con:bodyCon,alt:bodyAlt});
 }
-function ReturnStatement(func,array)
+
+function substitute(exp,env) {
+    let key;
+    for(let i=0;i<10;i++){
+        for(key in env){
+            exp = exp.replace(key,env[key]);
+        }
+    }
+    return exp;
+}
+
+
+function ReturnStatement(func,returnFunction,env)
 {
-    let decl = ''+func.loc.start.line+' return statement  '+IdentifierLiteral(func.argument);
-    array.push(decl);
+    let subVar = substitute(IdentifierLiteral(func.argument),env);
+    returnFunction.push({type:'return',val:subVar});
 }
+
 export {initialParse};
+
