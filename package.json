@@ -9,7 +9,7 @@
         "test:watch": "mocha-webpack --watch",
         "test": "mocha-webpack --webpack-config webpack.test.config.js --reporter=json",
         "coverage": "cross-env NODE_ENV=coverage nyc --reporter=html npm run test",
-        "lint": "eslint -f json -o ./lint/eslint-report.json src"
+        "lint": "eslint -f html -o ./lint/eslint-report.json src"
     },
     "nyc": {
         "include": [
@@ -24,6 +24,7 @@
         "escodegen": "^1.11.0",
         "esprima": "^4.0.0",
         "expression-eval": "^1.4.0",
+        "flowchart.js": "^1.11.3",
         "jquery": "^3.3.1"
     },
     "devDependencies": {

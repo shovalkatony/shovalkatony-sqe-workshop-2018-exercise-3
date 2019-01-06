@@ -1,6 +1,5 @@
 import * as esprima from 'esprima';
 const expr = require('expression-eval');
-'use strict';
 let inputParam;
 
 function initialParse(codeToParse,inputParam1) {
@@ -10,44 +9,43 @@ function initialParse(codeToParse,inputParam1) {
     inputParam = ExpressionStatementinput(esprima.parseScript(inputParam1, {loc: true}),{});
     jsonParse = esprima.parseScript(codeToParse, {loc: true});
     parseProgram(jsonParse.body,returnFunction,env);
-    debugger;
     return returnFunction;
 }
 
-const parseProgram = (body,returnFunction,env) => {
+const parseProgram = (body,returnFunction,env,color) => {
 
 
     if(body.type == 'BlockStatement')
         body = body.body;
     else if(body.type == 'IfStatement')
-        IfStatement(body,returnFunction, env);
+        IfStatement(body,returnFunction, env,color);
     for (let i = 0; i < body.length; i++)
-        switchState(body[i], returnFunction, env);
+        switchState(body[i], returnFunction, env,color);
 };
 
-function switchState(func,returnFunction,env) {
+function switchState(func,returnFunction,env,color) {
     switch (func.type) {
     case 'FunctionDeclaration':
         FunctionDeclaration(func,returnFunction,env);
         break;
     case 'VariableDeclaration':
-        VariableDeclaration(func,env);
+        VariableDeclaration(func,returnFunction,env,color);
         break;
     case 'ExpressionStatement':
-        ExpressionStatement(func, env);
+        ExpressionStatement(func,returnFunction,env,color);
         break;
     default:
-        switchState2(func,returnFunction,env);
+        switchState2(func,returnFunction,env,color);
     }
 }
 
-function switchState2(func,returnFunction,env) {
+function switchState2(func,returnFunction,env,color) {
     switch (func.type) {
     case 'WhileStatement':
-        WhileStatement(func,returnFunction,env);
+        WhileStatement(func,returnFunction,env,color);
         break;
     case 'IfStatement':
-        IfStatement(func,returnFunction, env);
+        IfStatement(func,returnFunction, env,color);
         break;
     case 'ReturnStatement':
         ReturnStatement(func,returnFunction,env);
@@ -60,14 +58,15 @@ function ExpressionStatementinput(func,env)
 {
     let add={},vari,val, i;
     for(i=0;i<func.body[0].expression.expressions.length;i++) {
-        vari = IdentifierLiteral(func.body[0].expression.expressions[i].left);
-        if(func.body[0].expression.expressions[i].right.type=='ArrayExpression') {
+        vari = 'A'+i;
+        if(func.body[0].expression.expressions[i].type=='ArrayExpression') {
             let arr = [];
-            for (let j = 0; j < func.body[0].expression.expressions[i].right.elements.length; j++)
-                arr.push(func.body[0].expression.expressions[i].right.elements[j].value);
+            for (let j = 0; j < func.body[0].expression.expressions[i].elements.length; j++)
+                arr.push(func.body[0].expression.expressions[i].elements[j].value);
+            val = arr;
         }
         else
-            val = IdentifierLiteral(func.body[0].expression.expressions[i].right);
+            val = IdentifierLiteral(func.body[0].expression.expressions[i]);
         add[vari] = val;
         env = Object.assign(env, add);
     }
@@ -79,40 +78,54 @@ function FunctionDeclaration(func,returnFunction,env)
     let name = func.id.name;
     let param = [];
     let functionElement= [];
-    for(let i=0; i<func.params.length; i++)
+    for(let i=0; i<func.params.length; i++){
         param.push(func.params[i].name);
-    parseProgram(func.body,functionElement,env);
+        inputParam[param[i]]=inputParam['A'+i];
+        delete inputParam['A'+i];
+    }
+    parseProgram(func.body,functionElement,env,'green');
     Object.assign(returnFunction,{type:'functionDecl',name:name,param:param,body:functionElement});
 }
 
-function ExpressionStatement(func,env)
+function ExpressionStatement(func,returnFunction,env,color)
 {
-    let vari,val;
-    vari = IdentifierLiteral(func.expression.left);
-    val = BinaryExpression(func.expression.right);
-    if(val.includes(vari))
-        val = substitute(val,env);
-    if(!includeString(val)) {
+    let vari,val='';
+    if(func.expression.type=='UpdateExpression'){
+        vari = func.expression.argument.name;
+        val = vari+' + 1';
+        returnFunction.push({type:'let',color:color,var:vari,val:val});}
+    else {
+        vari = IdentifierLiteral(func.expression.left);
+        val = BinaryExpression(func.expression.right);
+        returnFunction.push({type: 'let', color: color, var: vari, val: val});}
+    if (val.includes(vari))
+        val = substitute(val, env);
+    if (!includeString(val)) {
         const ast = expr.parse(val);
-        val = ''+expr.eval(ast, {});
+        val = '' + expr.eval(ast, {});
     }
     env[vari] = val;
+
 }
 function includeString(exp)
 {
     for(let i=0;i<exp.length;i++)
-        if((exp[i] >= 'A' && exp[i] <= 'Z') || (exp[i] >= 'a' && exp[i] <= 'z'))
-            return true;
+        checkLetter(exp[i]);
     return false;
 }
+function checkLetter(exp) {
+    if((exp >= 'A' && exp <= 'Z') || (exp >= 'a' && exp <= 'z'))
+        return true;
+}
 
-function VariableDeclaration(func,env)
+function VariableDeclaration(func,returnFunction,env,color)
 {
     let add={},vari,val;
     for(let i=0; i<func.declarations.length; i++)
     {
         vari = func.declarations[i].id.name;
         val = IdentifierLiteral(func.declarations[i].init);
+        returnFunction.push({type:'let',color:color,var:vari,val:val});
         add[vari] = val;
         env = Object.assign(env,add);
     }
@@ -132,11 +145,11 @@ function IdentifierLiteral(func)
         return BinaryExpression(func);
     else if (func.type == 'MemberExpression')
         return func.object.name +'['+IdentifierLiteral(func.property)+']';
-    else if (func.type == 'UnaryExpression')
+    else
         return func.operator+func.argument.value;
 }
 
-function WhileStatement(func,returnFunction,env)
+function WhileStatement(func,returnFunction,env,color)
 {
     let subVarTest = substitute(IdentifierLiteral(func.test),env);
     const ast = expr.parse(subVarTest);
@@ -144,32 +157,34 @@ function WhileStatement(func,returnFunction,env)
     let body = [];
     let envC = {};
     envC = Object.assign({}, env);
-    parseProgram(func.body,body,envC);
+    if(value) color='green';
+    else color='black';
+    parseProgram(func.body,body,envC,color);
     if(value)
-        returnFunction.push({type:'WhileState',color:'green',test:subVarTest,body:body});
+        returnFunction.push({type: 'WhileState', color: 'green', test: IdentifierLiteral(func.test), body: body});
     else
-        returnFunction.push({type:'WhileState',color:'red',test:subVarTest,body:body});
+        returnFunction.push({type:'WhileState',color:'black',test:IdentifierLiteral(func.test),body:body});
 }
 
-function IfStatement(func,returnFunction,env)
+function IfStatement(func,returnFunction,env,color)
 {
+    let colort,colorf;
     let subVarTest = substitute(IdentifierLiteral(func.test),env);
     const ast = expr.parse(subVarTest);
     const value = expr.eval(ast,inputParam);
-    let bodyCon = [];
-    let bodyAlt = [];
-    let envC = {},envA= {};
-    envC = Object.assign({}, env);
-    envA = Object.assign({}, env);
-    parseProgram(func.consequent,bodyCon,envC);
+    let bodyCon = [];let bodyAlt = [];let envC = {},envA= {};
+    envC = Object.assign({}, env);envA = Object.assign({}, env);
+    if(value) {if(color=='black') colort = 'black';
+    else colort = 'green';colorf='black';}
+    else{ colort='black';colorf='green';}
+    parseProgram(func.consequent,bodyCon,envC,colort);
     if(func.alternate!=null)
-        parseProgram(func.alternate,bodyAlt,envA);
-    else
-        bodyAlt = null;
-    if(value)
-        returnFunction.push({type:'IfExp',color:'green',test:subVarTest,con:bodyCon,alt:bodyAlt});
-    else
-        returnFunction.push({type:'IfExp',color:'red',test:subVarTest,con:bodyCon,alt:bodyAlt});
+        parseProgram(func.alternate,bodyAlt,envA,colorf);
+    else bodyAlt = null;
+    if(value){returnFunction.push({type:'IfExp',color:color,test:IdentifierLiteral(func.test),con:bodyCon,alt:bodyAlt});
+        color='green';}
+    else{returnFunction.push({type:'IfExp',color:color,test:IdentifierLiteral(func.test),con:bodyCon,alt:bodyAlt});
+        color='black';}
 }
 
 function substitute(exp,env) {
@@ -183,10 +198,10 @@ function substitute(exp,env) {
 }
 
 
-function ReturnStatement(func,returnFunction,env)
+function ReturnStatement(func,returnFunction)
 {
-    let subVar = substitute(IdentifierLiteral(func.argument),env);
-    returnFunction.push({type:'return',val:subVar});
+    //let subVar = substitute(IdentifierLiteral(func.argument),env);
+    returnFunction.push({type:'return',val:func.argument});
 }
 
 export {initialParse};
