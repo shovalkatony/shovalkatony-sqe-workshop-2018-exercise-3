@@ -91,8 +91,11 @@ function ExpressionStatement(func,returnFunction,env,color)
 {
     let vari,val='';
     if(func.expression.type=='UpdateExpression'){
-        vari = func.expression.argument.name;
-        val = vari+' + 1';
+        vari = func.expression.argument.name
+        if(func.expression.operator=='++')
+            val = vari+' + 1';
+        if(func.expression.operator=='--')
+            val = vari+' - 1';
         returnFunction.push({type:'let',color:color,var:vari,val:val});}
     else {
         vari = IdentifierLiteral(func.expression.left);
@@ -201,7 +204,7 @@ function substitute(exp,env) {
 function ReturnStatement(func,returnFunction)
 {
     //let subVar = substitute(IdentifierLiteral(func.argument),env);
-    returnFunction.push({type:'return',val:func.argument});
+    returnFunction.push({type:'return',val:IdentifierLiteral(func.argument)});
 }
 
 export {initialParse};

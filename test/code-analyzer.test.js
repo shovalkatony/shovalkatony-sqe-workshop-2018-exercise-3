@@ -58,26 +58,7 @@ describe('The javascript parser',() => {
                 '}\n','1,[2],3').name,
             'foo');
     });
-/*
-    it('assiment', () => {
-        assert.deepEqual(
-            initialParse(    'function foo(x, y, z){\n' +
-                '   let a = x + 1;\n' +
-                '   let b = a + y;\n' +
-                '   let c = 0;\n' +
-                'if(a<x){\n' +
-                '   a++;}\n' +
-                '   \n' +
-                '   while (a > z) {\n' +
-                '       c = a + b;\n' +
-                '       a++;    \n' +
-                '   }\n' +
-                '   \n' +
-                '   return z;\n' +
-                '}').name,
-            'foo');
-    });
-*/
+
     it('assiment', () => {
         assert.deepEqual(
             initialParse('function foo(x, y, z){\n' +
@@ -132,6 +113,63 @@ describe('The javascript parser',() => {
                 '    return z;\n' +
                 '}','(1,2,3)').name,
             'foo'
+        );
+    });
+
+    it('assiment', () => {
+        assert.deepEqual(
+            initialParse('function fo(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '\n' +
+                '    while (a < z) {\n' +
+                '        c = a + b;\n' +
+                '        z = c * 2;\n' +
+                '        a++;\n' +
+                '    }\n' +
+                '\n' +
+                '    return z;\n' +
+                '}','(1,2,3)').name,
+            'fo'
+        );
+    });
+
+    it('assiment', () => {
+        assert.deepEqual(
+            initialParse('function f(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '\n' +
+                '    while (a < z) {\n' +
+                '        c = a + b;\n' +
+                '        z = c * 2;\n' +
+                '        a++;\n' +
+                '    }\n' +
+                '\n' +
+                '    return z;\n' +
+                '}','(1,2,3)').name,
+            'f'
+        );
+    });
+
+    it('assiment', () => {
+        assert.deepEqual(
+            initialParse('function dd(x, y, z){\n' +
+                '    let a = x + 1;\n' +
+                '    let b = a + y;\n' +
+                '    let c = 0;\n' +
+                '\n' +
+                '    while (a < z) {\n' +
+                '        c = a + b;\n' +
+                '        z = c * 2;\n' +
+                '        a++;\n' +
+                '    }\n' +
+                '\n' +
+                '    return z;\n' +
+                '}','(1,2,3)').name,
+            'dd'
         );
     });
 

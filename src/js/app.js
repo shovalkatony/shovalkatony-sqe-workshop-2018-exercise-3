@@ -8,7 +8,6 @@ $(document).ready(function () {
         let codeToParse = $('#codePlaceholder').val();
         let paramsVal = $('#parsedCode').val();
         let contentArr = initialParse(codeToParse,paramsVal);
-        debugger;
         let structure = makeFlowChart(contentArr);
         op=0,cond=0,nodeNum=0;
         let flowGraph = flowchart.parse(structure);
@@ -149,7 +148,7 @@ function generateIf(input,start,end) {
     return {retStart:start,retEnd:end,nodeName:condName,leaves:leaves};
 }
 
-function generateWhile(input,start,end) {
+function generateWhile(input,start,end){
     let nullName = newNode();
     let nullNumber = addNumber();
     start = start+nullName+'=>operation: ('+nullNumber+') NULL | green \n';
@@ -181,7 +180,7 @@ function generateLet(input,start,end) {
 function generateReturn(input,start,end) {
     let nodeName = newNode();
     let nodeNumber = addNumber();
-    start = start+nodeName+'=>operation: ('+nodeNumber+')  return '+input.val.name+' | green \n';
+    start = start+nodeName+'=>operation: ('+nodeNumber+')  return '+input.val+' | green \n';
     nodeNum++;
     return {retStart:start,retEnd:end,nodeName:nodeName,leaves:null,end:true};
 }
